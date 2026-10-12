@@ -3,9 +3,10 @@
 #
 # Each source is fetched independently. If one fails, its previous file is kept and the
 # failure is recorded in meta.json, so the dashboard shows the last good data (flagged as
-# stale) instead of breaking.
+# stale) instead of breaking. Sources with `max_age_days` are only refetched once their
+# file is older than that (UN Comtrade: annual data and a strict rate limit).
 
-for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb")) {
+for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb", "fetch_comtrade")) {
   source(file.path("R", paste0(f, ".R")))
 }
 
@@ -18,6 +19,8 @@ read_config <- function(name) {
 countries <- read_config("countries.csv")
 indicators <- read_config("indicators.csv")
 groups <- read_config("groups.csv")
+trade_reporters <- read_config("trade_reporters.csv")
+hs_chapters <- read_config("hs_chapters.csv")
 
 # The dashboard colours up to eight countries at a time, so presets cannot be larger.
 group_members <- map(set_names(groups$group), function(g) {
@@ -56,6 +59,17 @@ sources <- list(
     id = "ecb_fx", file = "ecb_fx.json", fetch = function() fetch_ecb_fx(countries),
     name = "ECB euro foreign exchange reference rates",
     url = "https://data.ecb.europa.eu/data/datasets/EXR"
+  ),
+  list(
+    id = "eurostat_housing", file = "eurostat_housing.json", fetch = function() fetch_eurostat_housing(countries),
+    name = "Eurostat EU-SILC housing tenure",
+    url = "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho02/default/table"
+  ),
+  list(
+    id = "comtrade", file = "trade.json", max_age_days = 7,
+    fetch = function() fetch_comtrade(trade_reporters, countries, hs_chapters),
+    name = "UN Comtrade goods trade by partner and product",
+    url = "https://comtradeplus.un.org"
   )
 )
 
@@ -63,7 +77,8 @@ sources <- list(
 source_file <- c(
   imf = "imf.json", oecd_qna = "oecd_gdp.json", bis_cpi = "bis_monthly.json",
   bis_cbpol = "bis_monthly.json", bis_eer = "bis_monthly.json",
-  bis_credit = "bis_credit.json", eurostat = "eurostat_gov.json"
+  bis_credit = "bis_credit.json", eurostat = "eurostat_gov.json",
+  eurostat_silc = "eurostat_housing.json"
 )
 
 meta_file <- file.path(out_dir, "meta.json")
@@ -76,6 +91,14 @@ old_status <- if (file.exists(meta_file)) {
 now <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
 status <- map(sources, function(s) {
+  prev <- old_status[[s$id]]
+  if (!is.null(s$max_age_days) && isTRUE(prev$ok) && file.exists(file.path(out_dir, s$file))) {
+    age <- difftime(Sys.time(), as.POSIXct(prev$last_success, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), units = "days")
+    if (!is.na(age) && age < s$max_age_days) {
+      message("Skipping ", s$id, " (refreshed ", round(age, 1), " days ago)")
+      return(prev)
+    }
+  }
   message("Fetching ", s$id, " ...")
   started <- Sys.time()
   result <- tryCatch(s$fetch(), error = function(e) e)
@@ -83,7 +106,6 @@ status <- map(sources, function(s) {
 
   if (inherits(result, "error")) {
     message("  FAILED after ", elapsed, "s: ", conditionMessage(result))
-    prev <- old_status[[s$id]]
     list(
       id = s$id, name = s$name, url = s$url, file = s$file, ok = FALSE,
       error = conditionMessage(result),

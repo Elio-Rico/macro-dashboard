@@ -21,6 +21,7 @@
   --ok-ink: #006300;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
   --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+  --own-outright: #184f95; --own-mortgage: #6da7ec;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -45,6 +46,7 @@
     --ok-ink: #0ca30c;
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
     --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --own-outright: #9ec5f4; --own-mortgage: #3987e5;
   }
 }
 
@@ -68,6 +70,7 @@
   --ok-ink: #0ca30c;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
   --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --own-outright: #9ec5f4; --own-mortgage: #3987e5;
 }
 
 * { box-sizing: border-box; }
@@ -240,6 +243,34 @@ table.data tbody tr:hover td { background: var(--surface-2); }
 .bar-cell .bar-track { flex: 1; height: 10px; position: relative; }
 .bar-cell .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 3px 3px 0; }
 .bar-cell .bar-val { min-width: 42px; text-align: right; }
+
+/* ---------- horizontal bar lists & stacked bars ---------- */
+
+.bars { position: relative; margin-top: 10px; display: grid; gap: 4px; }
+.bar-row {
+  display: grid; grid-template-columns: minmax(96px, 36%) 1fr; align-items: center; gap: 10px;
+  min-height: 24px; border-radius: 6px; padding: 0 4px; outline: none;
+}
+.bar-row:hover, .bar-row:focus-visible { background: var(--surface-2); }
+.bar-row .bar-label { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row .bar-area { position: relative; padding-right: 58px; height: 16px; }
+.bar-row .bar-inner { position: relative; height: 100%; }
+.bar-row .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 0 4px 4px 0; }
+.bar-row .bar-value {
+  position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.bars-foot { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.stack-row { grid-template-columns: minmax(96px, 30%) 1fr 48px; }
+.stack-row .stack { display: flex; gap: 2px; height: 14px; }
+.stack-row .seg { height: 100%; min-width: 0; }
+.stack-row .seg:last-child { border-radius: 0 4px 4px 0; }
+.stack-row .stack-total { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.bar-row.emph { background: var(--surface-2); }
+.bar-row.emph .bar-label { color: var(--ink); font-weight: 650; }
+.bar-row.ref .bar-label { font-style: italic; }
+.legend .rect-key { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
 /* ---------- stat tiles ---------- */
 

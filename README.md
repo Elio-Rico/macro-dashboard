@@ -23,6 +23,8 @@ Netlify (eliobolliger.com) proxies /dashboard/* to the GitHub Pages site
 | BIS total credit | debt of households, non-financial corporations, government (% of GDP) | quarterly | `bis_credit.json` |
 | Eurostat | government debt and balance (EU/EEA) | quarterly | `eurostat_gov.json` |
 | ECB | euro reference exchange rates | daily | `ecb_fx.json` |
+| Eurostat EU-SILC | population by housing tenure (owners with/without mortgage, tenants) | annual | `eurostat_housing.json` |
+| UN Comtrade | goods trade by partner and HS chapter, gold (HS 7108) separately; refreshed weekly | annual | `trade.json` |
 
 Each source is fetched independently. If one fails, its previous file is kept and the
 failure is recorded in `docs/data/meta.json`; the dashboard flags it as stale.
@@ -47,6 +49,10 @@ loading the JSON files from `file://`.)
   DataMapper code (list: <https://www.imf.org/external/datamapper/api/v1/indicators>). To
   show it, add an `indicatorCard(grid, "<id>")` line in the relevant tab in
   `docs/assets/app.js`.
+- **Trade reporters**: `config/trade_reporters.csv` (dashboard id + UN Comtrade reporter code;
+  Switzerland is 757). Each reporter adds about 30 API calls, spaced out because the keyless
+  Comtrade endpoint is rate-limited; a free key in the `COMTRADE_KEY` environment variable (or
+  GitHub secret) switches to the regular endpoint.
 - **Other sources**: one fetch function per source in `R/fetch_*.R`; each returns the same
   structure (`freq`, `periods`, `series[indicator][country]`).
 

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-12T08:39:24Z",
+  "generated": "2026-10-12T09:11:43Z",
   "countries": [
     {
       "id": "CHE",
@@ -523,6 +523,50 @@
       "unit": "% of GDP",
       "freq": "Q",
       "decimals": 1
+    },
+    {
+      "id": "home_own",
+      "source": "eurostat_silc",
+      "code": "OWN",
+      "file": "eurostat_housing.json",
+      "label": "Homeownership rate",
+      "short": "Homeownership",
+      "unit": "% of population",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "home_own_mortgage",
+      "source": "eurostat_silc",
+      "code": "OWN_L",
+      "file": "eurostat_housing.json",
+      "label": "Owners with a mortgage or housing loan",
+      "short": "Owners with mortgage",
+      "unit": "% of population",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "home_own_outright",
+      "source": "eurostat_silc",
+      "code": "OWN_NL",
+      "file": "eurostat_housing.json",
+      "label": "Owners without a mortgage",
+      "short": "Owners outright",
+      "unit": "% of population",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "home_rent",
+      "source": "eurostat_silc",
+      "code": "RENT",
+      "file": "eurostat_housing.json",
+      "label": "Tenants",
+      "short": "Tenants",
+      "unit": "% of population",
+      "freq": "A",
+      "decimals": 1
     }
   ],
   "sources": [
@@ -532,8 +576,8 @@
       "url": "https://www.imf.org/external/datamapper",
       "file": "imf.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2031"
     },
     {
@@ -542,8 +586,8 @@
       "url": "https://data-explorer.oecd.org",
       "file": "oecd_gdp.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2026-Q2"
     },
     {
@@ -552,8 +596,8 @@
       "url": "https://data.bis.org",
       "file": "bis_monthly.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2026-09"
     },
     {
@@ -562,8 +606,8 @@
       "url": "https://data.bis.org/topics/TOTAL_CREDIT",
       "file": "bis_credit.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2026-Q1"
     },
     {
@@ -572,8 +616,8 @@
       "url": "https://ec.europa.eu/eurostat/web/government-finance-statistics",
       "file": "eurostat_gov.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2026-Q1"
     },
     {
@@ -582,9 +626,29 @@
       "url": "https://data.ecb.europa.eu/data/datasets/EXR",
       "file": "ecb_fx.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:39:24Z",
-      "last_success": "2026-10-12T08:39:24Z",
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
       "latest_period": "2026-10-09"
+    },
+    {
+      "id": "eurostat_housing",
+      "name": "Eurostat EU-SILC housing tenure",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho02/default/table",
+      "file": "eurostat_housing.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T09:11:43Z",
+      "last_success": "2026-10-12T09:11:43Z",
+      "latest_period": "2025"
+    },
+    {
+      "id": "comtrade",
+      "name": "UN Comtrade goods trade by partner and product",
+      "url": "https://comtradeplus.un.org",
+      "file": "trade.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T09:04:17Z",
+      "last_success": "2026-10-12T09:04:17Z",
+      "latest_period": "2025"
     }
   ]
 }

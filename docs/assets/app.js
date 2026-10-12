@@ -1,4 +1,6 @@
-import { lineChart, legend, seriesTable, sparkline, fmt, fmtSigned, fmtPeriod, htmlEl } from "./charts.js";
+import {
+  lineChart, legend, seriesTable, sparkline, barList, stackedBars, rectLegend, fmt, fmtSigned, fmtPeriod, htmlEl,
+} from "./charts.js";
 
 const MAX_SELECTED = 8;
 const RANGES = { "1Y": 1, "3Y": 3, "5Y": 5, "10Y": 10, Max: Infinity };
@@ -8,6 +10,8 @@ const TABS = [
   { id: "growth", label: "Growth & prices" },
   { id: "fiscal", label: "Public finances" },
   { id: "debt", label: "Debt by sector" },
+  { id: "housing", label: "Housing" },
+  { id: "trade", label: "Foreign trade" },
   { id: "fx", label: "Exchange rates" },
   { id: "sources", label: "Sources & notes" },
 ];
@@ -20,6 +24,8 @@ const SOURCE_TEXT = {
   bis_eer: "BIS effective exchange rates",
   eurostat: "Eurostat quarterly government finance statistics",
   bis_credit: "BIS total credit statistics",
+  eurostat_silc: "Eurostat, EU statistics on income and living conditions (EU-SILC)",
+  comtrade: "UN Comtrade (reported by national customs), converted at ECB annual average rates",
 };
 
 const state = {
@@ -29,6 +35,8 @@ const state = {
   range: "10Y",
   tab: "overview",
   base: "CHF",
+  gold: "excl",
+  reporter: null,
   sort: { key: null, dir: -1 },
   tableView: new Set(),
 };
@@ -83,6 +91,7 @@ function readHash() {
   if (RANGES[p.get("r")] != null) state.range = p.get("r");
   if (TABS.some((t) => t.id === p.get("tab"))) state.tab = p.get("tab");
   if (FX_BASES.includes(p.get("b"))) state.base = p.get("b");
+  if (["excl", "incl"].includes(p.get("g"))) state.gold = p.get("g");
   ensureSlots();
 }
 
@@ -94,6 +103,7 @@ function writeHash() {
     f: state.focus,
     r: state.range,
     b: state.base,
+    g: state.gold,
   });
   history.replaceState(null, "", "#" + p.toString().replace(/%2C/g, ","));
 }
@@ -319,6 +329,12 @@ function unitLabel(ind) {
 function renderFilters() {
   const root = $("filters");
   root.innerHTML = "";
+  // The trade tab has its own reporter and colours; showing the country chips there would
+  // suggest a link (and colours) that does not exist.
+  if (state.tab === "trade") {
+    htmlEl("span", "filter-label", root, "Country selection and period do not apply to this tab");
+    return;
+  }
 
   const countries = htmlEl("div", "chips", root);
   htmlEl("span", "filter-label", countries, "Countries");
@@ -511,6 +527,21 @@ function tilesFor(cid) {
   return tiles;
 }
 
+function renderTiles(parent, tileData) {
+  const tiles = htmlEl("div", "tiles", parent);
+  const els = tileData.map((t) => {
+    const el = htmlEl("div", "tile", tiles);
+    htmlEl("div", "label", el, t.label);
+    const v = htmlEl("div", "value", el, t.value);
+    if (t.unit) htmlEl("span", "unit", v, t.unit);
+    htmlEl("div", "meta", el, t.meta);
+    if (t.delta) htmlEl("div", "delta", el, t.delta);
+    return el;
+  });
+  // Sparklines need the laid-out tile width.
+  tileData.forEach((t, k) => sparkline(els[k], t.spark));
+}
+
 const OVERVIEW_COLUMNS = (Y) => [
   { id: "gdp_yoy", label: "Real GDP", sub: "y/y, latest qtr", kind: "latest", dec: 1 },
   { id: "gdp_growth_a", label: "GDP growth", sub: `${Y}, IMF`, kind: "year", year: Y, dec: 1 },
@@ -553,19 +584,7 @@ function renderOverview(panel) {
     update();
   });
 
-  const tiles = htmlEl("div", "tiles", panel);
-  const tileData = tilesFor(state.focus);
-  for (const t of tileData) {
-    const el = htmlEl("div", "tile", tiles);
-    htmlEl("div", "label", el, t.label);
-    const v = htmlEl("div", "value", el, t.value);
-    if (t.unit) htmlEl("span", "unit", v, t.unit);
-    htmlEl("div", "meta", el, t.meta);
-    if (t.delta) htmlEl("div", "delta", el, t.delta);
-    t._el = el;
-  }
-  // Sparklines need the laid-out tile width.
-  for (const t of tileData) sparkline(t._el, t.spark);
+  renderTiles(panel, tilesFor(state.focus));
 
   const Y = imfYear();
   const cols = OVERVIEW_COLUMNS(Y);
@@ -742,6 +761,301 @@ function renderDebt(panel) {
   indicatorCard(grid, "credit_pnfs", { includeZero: true });
 }
 
+// ---------------------------------------------------------------- housing
+
+const TENURE_SEGMENTS = [
+  { key: "own_outright", label: "Owners without mortgage", color: "var(--own-outright)" },
+  { key: "own_mortgage", label: "Owners with mortgage", color: "var(--own-mortgage)" },
+  { key: "rent", label: "Tenants", color: "var(--bar)" },
+];
+
+function renderHousing(panel) {
+  htmlEl("p", "note", panel,
+    "Share of the population by tenure status of the dwelling they live in (EU statistics on income and living conditions). " +
+    "Covers EU and EFTA countries, including Switzerland, and some candidate countries; the US, Japan and other economies are not included. " +
+    "National statistics can define homeownership differently (e.g. the Swiss FSO counts households, not persons).");
+  const grid = htmlEl("div", "grid", panel);
+  const H = DATA["eurostat_housing.json"];
+
+  card(grid, {
+    title: "Homeownership in Europe",
+    sub: "% of population, latest year available. Bars split the population by tenure; the number is the homeownership rate. " +
+      `${nameOf(state.focus)} is highlighted (change it with Focus on the Overview tab).`,
+    source: SOURCE_TEXT.eurostat_silc,
+    wide: true,
+    build: (body, mode) => {
+      if (!H || !H.latest) {
+        htmlEl("div", "empty", body, "Data currently unavailable.");
+        return;
+      }
+      const maxYear = Math.max(...H.latest.map((r) => Number(r.year)));
+      const label = (r) => r.name + (Number(r.year) < maxYear ? ` (${r.year})` : "");
+      if (mode === "table") {
+        const wrap = htmlEl("div", "table-wrap scroll", body);
+        const table = htmlEl("table", "data", wrap);
+        const tr = htmlEl("tr", null, htmlEl("thead", null, table));
+        for (const h of ["Country", "Year", "Owners", "with mortgage", "without mortgage", "Tenants"]) htmlEl("th", null, tr, h);
+        const tbody = htmlEl("tbody", null, table);
+        for (const r of H.latest) {
+          const row = htmlEl("tr", null, tbody);
+          htmlEl("td", null, row, r.name);
+          htmlEl("td", null, row, r.year);
+          for (const v of [r.own, r.own_mortgage, r.own_outright, r.rent]) htmlEl("td", null, row, fmt(v, 1));
+        }
+        return;
+      }
+      rectLegend(body, TENURE_SEGMENTS);
+      stackedBars(htmlEl("div", null, body), {
+        segments: TENURE_SEGMENTS,
+        totalText: (r) => fmt(r.total, 0) + "%",
+        rows: H.latest.map((r) => ({
+          label: label(r),
+          values: r,
+          total: r.own,
+          emph: r.id != null && r.id === state.focus,
+          ref: r.geo === "EU27_2020",
+          tip: () => [
+            `${r.name}, ${r.year}`,
+            [fmt(r.own, 1) + "%", "Owners, total"],
+            [fmt(r.own_outright, 1) + "%", "without mortgage", "var(--own-outright)"],
+            [fmt(r.own_mortgage, 1) + "%", "with mortgage", "var(--own-mortgage)"],
+            [fmt(r.rent, 1) + "%", "Tenants", "var(--bar)"],
+          ],
+        })),
+      });
+    },
+  });
+
+  indicatorCard(grid, "home_own", { title: "Homeownership rate over time", includeZero: true, sub: "% of population, annual" });
+  indicatorCard(grid, "home_own_mortgage", { title: "Owners with a mortgage or housing loan", includeZero: true, sub: "% of population, annual" });
+  indicatorCard(grid, "home_own_outright", { title: "Owners without a mortgage", includeZero: true, sub: "% of population, annual" });
+  indicatorCard(grid, "credit_hh", { title: "Household debt", sub: "% of GDP, quarterly", includeZero: true });
+}
+
+// ---------------------------------------------------------------- foreign trade
+
+const goldOut = () => state.gold === "excl";
+
+// Values are USD million; gold (HS 7108) is stored separately so it can be taken out.
+function tradeVal(entry, i, mode = state.gold) {
+  const v = entry?.incl?.[i];
+  if (v == null) return null;
+  return mode === "excl" ? v - (entry.gold?.[i] ?? 0) : v;
+}
+
+function tradeTotal(flow, i, mode = state.gold) {
+  const t = flow.total[i];
+  if (t == null) return null;
+  return mode === "excl" ? t - (flow.gold[i] ?? 0) : t;
+}
+
+function tradeRank(dict, i, n, mode, exclude = []) {
+  return Object.entries(dict)
+    .filter(([k]) => !exclude.includes(k))
+    .map(([k, e]) => ({ key: k, e, v: tradeVal(e, i, mode) }))
+    .filter((x) => x.v > 0)
+    .sort((a, b) => b.v - a.v)
+    .slice(0, n);
+}
+
+// Annual average price of one USD in the reporter's currency (ECB rates); falls back to USD.
+function usdConverter(ccy, years) {
+  const fx = DATA["ecb_fx.json"];
+  if (!fx || !fx.rates.USD || (ccy !== "EUR" && !fx.rates[ccy])) return { ccy: "USD", rate: years.map(() => 1) };
+  const rate = years.map((y) => {
+    let sum = 0, n = 0;
+    fx.periods.forEach((p, i) => {
+      if (!p.startsWith(String(y))) return;
+      const v = fxPrice("USD", ccy, i);
+      if (v != null) { sum += v; n++; }
+    });
+    return n ? sum / n : null;
+  });
+  return { ccy, rate };
+}
+
+function tradeBarsCard(grid, { title, sub, dict, flow, i, conv, exclude = [], what }) {
+  const total = tradeTotal(flow, i);
+  const bn = (v) => (v == null || conv.rate[i] == null ? null : (v * conv.rate[i]) / 1000);
+  const list = tradeRank(dict, i, 25, state.gold, exclude);
+  card(grid, {
+    title,
+    sub,
+    source: SOURCE_TEXT.comtrade,
+    build: (body, mode) => {
+      if (!list.length || !total) {
+        htmlEl("div", "empty", body, "No data.");
+        return;
+      }
+      if (mode === "table") {
+        const wrap = htmlEl("div", "table-wrap scroll", body);
+        const table = htmlEl("table", "data", wrap);
+        const tr = htmlEl("tr", null, htmlEl("thead", null, table));
+        for (const h of ["#", what, `${conv.ccy} bn`, "Share, %"]) htmlEl("th", null, tr, h);
+        const tbody = htmlEl("tbody", null, table);
+        list.forEach((x, k) => {
+          const row = htmlEl("tr", null, tbody);
+          htmlEl("td", null, row, String(k + 1));
+          htmlEl("td", null, row, x.e.name);
+          htmlEl("td", null, row, fmt(bn(x.v), 1));
+          htmlEl("td", null, row, fmt((100 * x.v) / total, 1));
+        });
+        return;
+      }
+      const top = list.slice(0, 12);
+      barList(htmlEl("div", null, body), {
+        rows: top.map((x) => ({
+          label: x.e.name,
+          value: (100 * x.v) / total,
+          text: fmt((100 * x.v) / total, 1) + "%",
+          tip: () => [x.e.name, [fmt((100 * x.v) / total, 1) + "%", "of total"], [`${conv.ccy} ${fmt(bn(x.v), 1)} bn`, "value"]],
+        })),
+      });
+      const covered = top.reduce((s, x) => s + x.v, 0);
+      htmlEl("div", "bars-foot", body, `Top ${top.length} together: ${fmt((100 * covered) / total, 0)}% of the total (${conv.ccy} ${fmt(bn(total), 1)} bn).`);
+    },
+  });
+}
+
+function tradeShareHistoryCard(grid, { title, sub, dict, flow, years, exclude = [], withEU = false }) {
+  const li = years.length - 1;
+  // Stable colours: union of the top 6 with and without gold, ordered by the ranking
+  // without gold, so switching the gold view never repaints a line.
+  const order = [...new Set([
+    ...tradeRank(dict, li, 6, "excl", exclude).map((x) => x.key),
+    ...tradeRank(dict, li, 6, "incl", exclude).map((x) => x.key),
+  ])].slice(0, 7);
+  const shown = tradeRank(dict, li, 6, state.gold, exclude).map((x) => x.key).filter((k) => order.includes(k));
+  const share = (e, i) => {
+    const v = tradeVal(e, i), t = tradeTotal(flow, i);
+    return v == null || !t ? null : (100 * v) / t;
+  };
+  const series = shown.map((k) => ({
+    id: k, label: dict[k].name, color: `var(--s${order.indexOf(k) + 1})`, values: years.map((_, i) => share(dict[k], i)),
+  }));
+  if (withEU && dict.EU27) {
+    series.push({ id: "EU27", label: "EU-27", color: "var(--s8)", values: years.map((_, i) => share(dict.EU27, i)) });
+  }
+  const data = { periods: years.map(String), series };
+  card(grid, {
+    title,
+    sub,
+    source: SOURCE_TEXT.comtrade,
+    build: (body, mode) => chartBody(body, mode, { title, data, freq: "A", decimals: 1, includeZero: true }),
+  });
+}
+
+function renderTrade(panel) {
+  const T = DATA["trade.json"];
+  const head = htmlEl("div", "panel-head", panel);
+  if (!T || !Object.keys(T.reporters || {}).length) {
+    htmlEl("h2", null, head, "Foreign trade in goods");
+    htmlEl("div", "empty", panel, "Trade data currently unavailable.");
+    return;
+  }
+  const ids = Object.keys(T.reporters);
+  if (!ids.includes(state.reporter)) state.reporter = ids.includes("CHE") ? "CHE" : ids[0];
+  const rid = state.reporter;
+  const R = T.reporters[rid];
+  const years = R.years;
+  const li = years.length - 1;
+  const Y = years[li];
+  const X = R.flows.X, M = R.flows.M;
+  const conv = usdConverter(COUNTRY[rid]?.currency ?? "USD", years);
+
+  htmlEl("h2", null, head, `Foreign trade in goods: ${nameOf(rid)}, ${Y}`);
+  const controls = htmlEl("div", "controls", head);
+  if (ids.length > 1) {
+    const sel = htmlEl("select", "select", controls);
+    sel.setAttribute("aria-label", "Reporting country");
+    for (const id of ids) {
+      const o = htmlEl("option", null, sel, nameOf(id));
+      o.value = id;
+      o.selected = id === rid;
+    }
+    sel.addEventListener("change", () => { state.reporter = sel.value; update(); });
+  }
+  htmlEl("span", "filter-label", controls, "Gold");
+  const seg = htmlEl("div", "segmented", controls);
+  seg.setAttribute("role", "group");
+  seg.setAttribute("aria-label", "Include non-monetary gold");
+  for (const [k, lab] of [["excl", "Excluded"], ["incl", "Included"]]) {
+    const b = htmlEl("button", null, seg, lab);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.gold === k));
+    b.addEventListener("click", () => { state.gold = k; update(); });
+  }
+
+  htmlEl("p", "note", panel,
+    `Annual merchandise trade as reported to UN Comtrade, in ${conv.ccy} at annual average exchange rates. ` +
+    (goldOut()
+      ? "Non-monetary gold (HS 7108) is excluded: gold refining and transit dominate Swiss trade flows and swing with the gold market. "
+      : "Non-monetary gold (HS 7108) is included. ") +
+    "Swiss customs' “Total 1” additionally excludes other precious metals, gems, art and antiques, so figures differ slightly.");
+
+  const bn = (usdMn, i) => (usdMn == null || conv.rate[i] == null ? null : (usdMn * conv.rate[i]) / 1000);
+  const series = (fn) => years.map((_, i) => fn(i));
+  const pct = (a, b) => (a == null || !b ? null : (100 * a) / b);
+  const tiles = [];
+  for (const [flow, label] of [[X, "Exports"], [M, "Imports"]]) {
+    const v = series((i) => bn(tradeTotal(flow, i), i));
+    tiles.push({
+      label: `${label}${goldOut() ? ", excl. gold" : ""}`, value: fmt(v[li], 1), unit: ` ${conv.ccy} bn`, meta: String(Y),
+      delta: v[li - 1] ? `${fmtSigned(100 * (v[li] / v[li - 1] - 1), 1)}% vs ${Y - 1}` : "", spark: v,
+    });
+  }
+  const bal = series((i) => {
+    const x = bn(tradeTotal(X, i), i), m = bn(tradeTotal(M, i), i);
+    return x == null || m == null ? null : x - m;
+  });
+  const gdp = yearValue("gdp_usd", rid, Y);
+  const balUsd = tradeTotal(X, li) - tradeTotal(M, li);
+  tiles.push({
+    label: "Trade balance", value: fmt(bal[li], 1), unit: ` ${conv.ccy} bn`, meta: String(Y),
+    delta: gdp ? `${fmtSigned(balUsd / 10 / gdp, 1)}% of GDP` : "", spark: bal,
+  });
+  for (const [key, label] of [["EU27", "EU-27"], ["USA", "United States"]]) {
+    const e = X.partners[key];
+    if (!e) continue;
+    const s = series((i) => pct(tradeVal(e, i), tradeTotal(X, i)));
+    tiles.push({
+      label: `Exports to ${label}`, value: fmt(s[li], 1), unit: "% of total", meta: String(Y),
+      delta: s[li - 1] != null ? `${fmtSigned(s[li] - s[li - 1], 1)} pp vs ${Y - 1}` : "", spark: s,
+    });
+  }
+  const goldShare = series((i) => pct(X.gold[i], X.total[i]));
+  tiles.push({
+    label: "Gold in total exports", value: fmt(goldShare[li], 1), unit: "%", meta: `${Y}, share of exports incl. gold`,
+    delta: goldShare[li - 1] != null ? `${fmtSigned(goldShare[li] - goldShare[li - 1], 1)} pp vs ${Y - 1}` : "", spark: goldShare,
+  });
+  renderTiles(panel, tiles);
+
+  const grid = htmlEl("div", "grid", panel);
+  const gl = goldOut() ? ", excl. gold" : "";
+  tradeBarsCard(grid, { title: `Main export destinations, ${Y}`, sub: `% of total exports${gl}`, dict: X.partners, flow: X, i: li, conv, exclude: ["EU27"], what: "Destination" });
+  tradeBarsCard(grid, { title: `Main import origins, ${Y}`, sub: `% of total imports${gl}`, dict: M.partners, flow: M, i: li, conv, exclude: ["EU27"], what: "Origin" });
+  tradeBarsCard(grid, { title: `Main exported goods, ${Y}`, sub: `HS chapters, % of total exports${gl}`, dict: X.products, flow: X, i: li, conv, what: "Product (HS chapter)" });
+  tradeBarsCard(grid, { title: `Main imported goods, ${Y}`, sub: `HS chapters, % of total imports${gl}`, dict: M.products, flow: M, i: li, conv, what: "Product (HS chapter)" });
+  tradeShareHistoryCard(grid, { title: "Export destinations over time", sub: `% of total exports${gl}, top 6 in ${Y} and the EU-27`, dict: X.partners, flow: X, years, exclude: ["EU27"], withEU: true });
+  tradeShareHistoryCard(grid, { title: "Import origins over time", sub: `% of total imports${gl}, top 6 in ${Y} and the EU-27`, dict: M.partners, flow: M, years, exclude: ["EU27"], withEU: true });
+  tradeShareHistoryCard(grid, { title: "Exported goods over time", sub: `% of total exports${gl}, top 6 HS chapters in ${Y}`, dict: X.products, flow: X, years });
+  tradeShareHistoryCard(grid, { title: "Imported goods over time", sub: `% of total imports${gl}, top 6 HS chapters in ${Y}`, dict: M.products, flow: M, years });
+
+  const totals = {
+    periods: years.map(String),
+    series: [
+      { id: "X", label: "Exports", color: "var(--s1)", values: series((i) => bn(tradeTotal(X, i), i)) },
+      { id: "M", label: "Imports", color: "var(--s2)", values: series((i) => bn(tradeTotal(M, i), i)) },
+    ],
+  };
+  card(grid, {
+    title: "Exports and imports",
+    sub: `${conv.ccy} bn, annual${gl}`,
+    source: SOURCE_TEXT.comtrade,
+    build: (body, mode) => chartBody(body, mode, { title: "Exports and imports", data: totals, freq: "A", decimals: 1, includeZero: true }),
+  });
+}
+
 // ---------------------------------------------------------------- exchange rates
 
 function fxCurrencies() {
@@ -887,6 +1201,8 @@ function renderSources(panel) {
     "Inflation is the year-on-year change in consumer prices as compiled by the BIS. Policy rates are end-of-month values; the overview shows the latest daily value. Euro-area members are shown with the ECB rate.",
     "Sectoral debt is BIS total credit to households, non-financial corporations and the general government, in % of GDP.",
     "Exchange rates are ECB euro reference rates; cross rates (e.g. against the CHF) are derived from them. Effective exchange rates are BIS broad indices.",
+    "Homeownership is the share of the population living in an owner-occupied dwelling (Eurostat, EU-SILC), split into owners with and without an outstanding mortgage or housing loan. Countries that stopped reporting are dropped from the cross-country comparison.",
+    "Foreign trade is annual merchandise trade reported to UN Comtrade (Swiss data from the Federal Office for Customs and Border Security), by partner country and HS chapter, converted from USD at ECB annual average rates. Excluding gold removes non-monetary gold (HS 7108). Trade data are refreshed weekly.",
     "Data are refreshed automatically every day. If a source cannot be reached, the previous data are kept and flagged above.",
   ];
   const ul = htmlEl("ul", "note", panel);
@@ -920,6 +1236,8 @@ function renderPanel() {
     growth: renderGrowth,
     fiscal: renderFiscal,
     debt: renderDebt,
+    housing: renderHousing,
+    trade: renderTrade,
     fx: renderFx,
     sources: renderSources,
   })[state.tab](panel);
@@ -946,7 +1264,7 @@ async function main() {
     META = await fetchJSON("data/meta.json");
     for (const c of META.countries) COUNTRY[c.id] = c;
     for (const i of META.indicators) IND[i.id] = i;
-    const files = [...new Set([...META.indicators.map((i) => i.file), "ecb_fx.json"])];
+    const files = [...new Set([...META.indicators.map((i) => i.file), ...META.sources.map((x) => x.file)])];
     await Promise.all(files.map(async (f) => {
       try {
         DATA[f] = await fetchJSON("data/" + f);

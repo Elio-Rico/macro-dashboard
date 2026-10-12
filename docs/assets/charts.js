@@ -347,6 +347,103 @@ export function seriesTable(parent, { periods, freq, series, decimals = 1, proje
   return wrap;
 }
 
+// ---------- horizontal bars (HTML) ----------
+
+// Shared hover/focus tooltip for HTML bar rows. `lines(row)` returns [head, ...rows] where
+// each row is [value, label].
+function attachRowTooltip(box, rowEl, lines) {
+  let tip = box.querySelector(":scope > .tooltip");
+  if (!tip) {
+    tip = htmlEl("div", "tooltip", box);
+    tip.style.display = "none";
+  }
+  const show = () => {
+    const [head, ...rows] = lines();
+    tip.innerHTML = "";
+    htmlEl("div", "t-head", tip, head);
+    for (const [v, n, color] of rows) {
+      const r = htmlEl("div", "t-row", tip);
+      if (color) {
+        const key = htmlEl("span", "key", r);
+        key.style.background = color;
+        key.style.height = "8px";
+        key.style.width = "8px";
+        key.style.borderRadius = "2px";
+      }
+      htmlEl("span", "v", r, v);
+      htmlEl("span", "n", r, n);
+    }
+    tip.style.display = "";
+    const top = rowEl.offsetTop + rowEl.offsetHeight + 4;
+    const maxTop = box.offsetHeight - tip.offsetHeight;
+    tip.style.top = `${top > maxTop ? Math.max(0, rowEl.offsetTop - tip.offsetHeight - 4) : top}px`;
+    tip.style.left = `${Math.min(box.clientWidth - tip.offsetWidth, rowEl.offsetLeft + rowEl.offsetWidth * 0.35)}px`;
+  };
+  const hide = () => (tip.style.display = "none");
+  rowEl.tabIndex = 0;
+  rowEl.addEventListener("pointerenter", show);
+  rowEl.addEventListener("pointerleave", hide);
+  rowEl.addEventListener("focus", show);
+  rowEl.addEventListener("blur", hide);
+}
+
+/**
+ * Ranked horizontal bars, one colour. rows: [{ label, value, text, tip: () => [head, [v, n], ...] }]
+ */
+export function barList(container, { rows, max }) {
+  container.innerHTML = "";
+  const box = htmlEl("div", "bars", container);
+  const top = max ?? Math.max(...rows.map((r) => r.value ?? 0), 1e-9);
+  for (const r of rows) {
+    const row = htmlEl("div", "bar-row", box);
+    const lab = htmlEl("div", "bar-label", row, r.label);
+    lab.title = r.label;
+    const inner = htmlEl("div", "bar-inner", htmlEl("div", "bar-area", row));
+    const w = Math.max(0, (100 * (r.value ?? 0)) / top);
+    htmlEl("div", "bar-fill", inner).style.width = `${w}%`;
+    const val = htmlEl("span", "bar-value", inner, r.text);
+    val.style.left = `calc(${w}% + 6px)`;
+    if (r.tip) attachRowTooltip(box, row, r.tip);
+  }
+  return box;
+}
+
+/**
+ * 100% stacked horizontal bars. segments: [{ key, label, color }];
+ * rows: [{ label, values: {key: number}, total, emph, ref, tip }]
+ */
+export function stackedBars(container, { rows, segments, totalText }) {
+  container.innerHTML = "";
+  const box = htmlEl("div", "bars", container);
+  for (const r of rows) {
+    const row = htmlEl("div", "bar-row stack-row" + (r.emph ? " emph" : "") + (r.ref ? " ref" : ""), box);
+    const lab = htmlEl("div", "bar-label", row, r.label);
+    lab.title = r.label;
+    const stack = htmlEl("div", "stack", row);
+    const sum = segments.reduce((s, g) => s + (r.values[g.key] ?? 0), 0) || 1;
+    for (const g of segments) {
+      const v = r.values[g.key] ?? 0;
+      if (v <= 0) continue;
+      const seg = htmlEl("div", "seg", stack);
+      seg.style.flex = `${v / sum} 1 0`;
+      seg.style.background = g.color;
+    }
+    htmlEl("div", "stack-total", row, totalText(r));
+    if (r.tip) attachRowTooltip(box, row, r.tip);
+  }
+  return box;
+}
+
+export function rectLegend(parent, segments) {
+  const box = htmlEl("div", "legend", parent);
+  for (const g of segments) {
+    const item = htmlEl("span", null, box);
+    htmlEl("span", "rect-key", item).style.background = g.color;
+    item.appendChild(document.createTextNode(g.label));
+  }
+  return box;
+}
+
 // ---------- sparkline ----------
 
 export function sparkline(parent, values) {

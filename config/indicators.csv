@@ -24,3 +24,7 @@ credit_hh,bis_credit,H,Credit to households,Households,% of GDP,Q,1
 credit_nfc,bis_credit,N,Credit to non-financial corporations,Non-financial corporations,% of GDP,Q,1
 credit_gov,bis_credit,G,Credit to general government (nominal value),Government,% of GDP,Q,1
 credit_pnfs,bis_credit,P,Credit to the private non-financial sector,Private non-financial,% of GDP,Q,1
+home_own,eurostat_silc,OWN,Homeownership rate,Homeownership,% of population,A,1
+home_own_mortgage,eurostat_silc,OWN_L,"Owners with a mortgage or housing loan",Owners with mortgage,% of population,A,1
+home_own_outright,eurostat_silc,OWN_NL,Owners without a mortgage,Owners outright,% of population,A,1
+home_rent,eurostat_silc,RENT,Tenants,Tenants,% of population,A,1
