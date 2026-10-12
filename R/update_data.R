@@ -6,7 +6,7 @@
 # stale) instead of breaking. Sources with `max_age_days` are only refetched once their
 # file is older than that (UN Comtrade: annual data and a strict rate limit).
 
-for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb", "fetch_comtrade")) {
+for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb", "fetch_comtrade", "fetch_efv")) {
   source(file.path("R", paste0(f, ".R")))
 }
 
@@ -66,6 +66,11 @@ sources <- list(
     url = "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho02/default/table"
   ),
   list(
+    id = "efv_debt", file = "swiss_debt.json", fetch = function() fetch_efv_debt(),
+    name = "Federal Finance Administration, government finance statistics (GFS)",
+    url = "https://www.data.finance.admin.ch"
+  ),
+  list(
     id = "comtrade", file = "trade.json", max_age_days = 7,
     fetch = function() fetch_comtrade(trade_reporters, countries, hs_chapters),
     name = "UN Comtrade goods trade by partner and product",
@@ -119,7 +124,7 @@ status <- map(sources, function(s) {
     list(
       id = s$id, name = s$name, url = s$url, file = s$file, ok = TRUE,
       last_attempt = now, last_success = now,
-      latest_period = tail(result$periods, 1)
+      latest_period = result$latest_period %||% tail(result$periods, 1)
     )
   }
 })

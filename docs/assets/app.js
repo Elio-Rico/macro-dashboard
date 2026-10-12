@@ -1,5 +1,6 @@
 import {
-  lineChart, legend, seriesTable, sparkline, barList, stackedBars, rectLegend, fmt, fmtSigned, fmtPeriod, htmlEl,
+  lineChart, legend, seriesTable, sparkline, barList, stackedBars, rectLegend, stackedColumns, stackLegend,
+  fmt, fmtSigned, fmtPeriod, htmlEl,
 } from "./charts.js";
 
 const MAX_SELECTED = 8;
@@ -9,6 +10,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "growth", label: "Growth & prices" },
   { id: "fiscal", label: "Public finances" },
+  { id: "swissdebt", label: "Swiss debt" },
   { id: "debt", label: "Debt by sector" },
   { id: "housing", label: "Housing" },
   { id: "trade", label: "Foreign trade" },
@@ -26,6 +28,7 @@ const SOURCE_TEXT = {
   bis_credit: "BIS total credit statistics",
   eurostat_silc: "Eurostat, EU statistics on income and living conditions (EU-SILC)",
   comtrade: "UN Comtrade (reported by national customs), converted at ECB annual average rates",
+  efv: "Federal Finance Administration (FFA), government finance statistics",
 };
 
 const state = {
@@ -36,6 +39,7 @@ const state = {
   tab: "overview",
   base: "CHF",
   gold: "excl",
+  debtUnit: "gdp",
   reporter: null,
   sort: { key: null, dir: -1 },
   tableView: new Set(),
@@ -92,6 +96,7 @@ function readHash() {
   if (TABS.some((t) => t.id === p.get("tab"))) state.tab = p.get("tab");
   if (FX_BASES.includes(p.get("b"))) state.base = p.get("b");
   if (["excl", "incl"].includes(p.get("g"))) state.gold = p.get("g");
+  if (["gdp", "chf"].includes(p.get("u"))) state.debtUnit = p.get("u");
   ensureSlots();
 }
 
@@ -104,6 +109,7 @@ function writeHash() {
     r: state.range,
     b: state.base,
     g: state.gold,
+    u: state.debtUnit,
   });
   history.replaceState(null, "", "#" + p.toString().replace(/%2C/g, ","));
 }
@@ -329,10 +335,15 @@ function unitLabel(ind) {
 function renderFilters() {
   const root = $("filters");
   root.innerHTML = "";
-  // The trade tab has its own reporter and colours; showing the country chips there would
-  // suggest a link (and colours) that does not exist.
+  // The trade and Swiss debt tabs have their own entities and colours; showing the country
+  // chips there would suggest a link (and colours) that does not exist.
   if (state.tab === "trade") {
     htmlEl("span", "filter-label", root, "Country selection and period do not apply to this tab");
+    return;
+  }
+  if (state.tab === "swissdebt") {
+    htmlEl("span", "filter-label", root, "Country selection does not apply to this tab");
+    renderRangeFilter(root);
     return;
   }
 
@@ -383,6 +394,10 @@ function renderFilters() {
     }
   });
 
+  renderRangeFilter(root);
+}
+
+function renderRangeFilter(root) {
   const range = htmlEl("div", "chips", root);
   htmlEl("span", "filter-label", range, "Period");
   const seg = htmlEl("div", "segmented", range);
@@ -759,6 +774,173 @@ function renderDebt(panel) {
   indicatorCard(grid, "credit_nfc", { includeZero: true });
   indicatorCard(grid, "credit_gov", { includeZero: true });
   indicatorCard(grid, "credit_pnfs", { includeZero: true });
+}
+
+// ---------------------------------------------------------------- Swiss debt (FFA)
+
+// Each debt instrument keeps one colour in every chart; financial-asset positions (drawn
+// below zero in the net debt charts) use a lighter tint of the same hue.
+const INSTRUMENT_COLOR = {
+  1: "var(--s7)", 2: "var(--s4)", 3: "var(--s1)", 4: "var(--s2)", 6: "var(--s5)", 8: "var(--s3)", other: "var(--bar)",
+};
+// Subsector lines (validated as a set, all pairs): general government in ink, social
+// security (close to zero) in neutral grey.
+const SECTOR_COLOR = { staat: "var(--ink)", bund: "var(--s7)", ktn: "var(--s6)", gdn: "var(--s5)", sv: "var(--muted)" };
+
+function componentColor(c) {
+  const base = INSTRUMENT_COLOR[c.instrument] ?? "var(--bar)";
+  return c.side === "A" ? `color-mix(in srgb, ${base} 50%, var(--surface))` : base;
+}
+
+function renderSwissDebt(panel) {
+  const D = DATA["swiss_debt.json"];
+  const head = htmlEl("div", "panel-head", panel);
+  htmlEl("h2", null, head, "Swiss public debt");
+  if (!D) {
+    htmlEl("div", "empty", panel, "Data currently unavailable.");
+    return;
+  }
+  const controls = htmlEl("div", "controls", head);
+  htmlEl("span", "filter-label", controls, "Unit");
+  const seg = htmlEl("div", "segmented", controls);
+  seg.setAttribute("role", "group");
+  seg.setAttribute("aria-label", "Unit");
+  for (const [k, lab] of [["gdp", "% of GDP"], ["chf", "CHF bn"]]) {
+    const b = htmlEl("button", null, seg, lab);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.debtUnit === k));
+    b.addEventListener("click", () => { state.debtUnit = k; update(); });
+  }
+
+  const P = D.periods;
+  const Y = Number(D.latest_period);
+  const iY = P.indexOf(String(Y));
+  const inGdp = state.debtUnit === "gdp";
+  const unit = inGdp ? "% of GDP" : "CHF bn";
+  const conv = (v, i) => (v == null ? null : inGdp ? (D.gdp[i] ? (100 * v) / D.gdp[i] : null) : v / 1000);
+  const convAll = (arr) => arr.map((v, i) => conv(v, i));
+
+  // Window: same period control as the other tabs, at least 8 years.
+  const years = RANGES[state.range];
+  const firstYear = years === Infinity ? Number(P[0]) : Y - Math.max(years, 8) + 1;
+  const start = Math.max(0, P.indexOf(String(firstYear)));
+
+  htmlEl("p", "note", panel,
+    "Gross debt (IMF) = liabilities (GFS 630) excluding equity and investment fund shares (6305) and financial derivatives (6307). " +
+    "Net debt (IMF) = gross debt minus financial assets (620) excluding equity (6205) and financial derivatives (6207). " +
+    "Maastricht debt as published by the FFA, including its forecasts. General government is consolidated, so it is smaller than the sum of the subsectors. " +
+    `Data from the FFA's GFS balance sheets up to ${Y}; GDP from the FFA.`);
+
+  const staat = D.sectors.find((s) => s.id === "staat");
+  const tiles = [];
+  for (const [key, label] of [["gross", "Gross debt (IMF)"], ["net", "Net debt (IMF)"], ["maastricht", "Maastricht debt"]]) {
+    const raw = key === "maastricht" ? staat.maastricht : staat[key].total;
+    const v = convAll(raw);
+    tiles.push({
+      label: `${label}, general government`,
+      value: fmt(v[iY], 1),
+      unit: inGdp ? "% of GDP" : " CHF bn",
+      meta: String(Y),
+      delta: v[iY - 1] != null ? `${fmtSigned(v[iY] - v[iY - 1], 1)} ${inGdp ? "pp" : "CHF bn"} vs ${Y - 1}` : "",
+      spark: v.slice(Math.max(0, iY - 11), iY + 1),
+    });
+  }
+  renderTiles(panel, tiles);
+
+  const grid = htmlEl("div", "grid", panel);
+
+  // Summary table: the three measures for every subsector, latest year.
+  card(grid, {
+    title: `Debt by subsector, ${Y}`,
+    sub: "CHF bn and % of GDP",
+    source: SOURCE_TEXT.efv,
+    wide: true,
+    tableOnly: true,
+    build: (body) => {
+      const wrap = htmlEl("div", "table-wrap", body);
+      const table = htmlEl("table", "data", wrap);
+      const tr = htmlEl("tr", null, htmlEl("thead", null, table));
+      htmlEl("th", null, tr, "Subsector");
+      for (const h of ["Gross debt (IMF)", "Net debt (IMF)", "Maastricht debt"]) {
+        for (const u of ["CHF bn", "% of GDP"]) {
+          const th = htmlEl("th", null, tr, h);
+          htmlEl("span", "th-sub", th, u);
+        }
+      }
+      const tbody = htmlEl("tbody", null, table);
+      for (const s of D.sectors) {
+        const row = htmlEl("tr", null, tbody);
+        const td0 = htmlEl("td", null, row);
+        const lab = htmlEl("span", "country", td0);
+        htmlEl("span", "dot", lab).style.background = SECTOR_COLOR[s.id];
+        lab.appendChild(document.createTextNode(s.name));
+        for (const raw of [s.gross.total[iY], s.net.total[iY], s.maastricht[iY]]) {
+          htmlEl("td", raw == null ? "na" : null, row, fmt(raw == null ? null : raw / 1000, 1));
+          htmlEl("td", raw == null ? "na" : null, row, fmt(raw == null || !D.gdp[iY] ? null : (100 * raw) / D.gdp[iY], 1));
+        }
+      }
+    },
+  });
+
+  // Maastricht debt: one line per subsector, FFA forecasts shaded.
+  const mSeries = D.sectors.map((s) => ({
+    id: s.id, label: s.name, short: s.name, color: SECTOR_COLOR[s.id], values: convAll(s.maastricht),
+  }));
+  const mData = sliceSeries(P, mSeries, start);
+  const pIdx = P.indexOf(D.projection_start);
+  const mTitle = "Maastricht debt by subsector";
+  card(grid, {
+    title: mTitle,
+    sub: `${unit}, annual; FFA forecasts from ${D.projection_start} (shaded)`,
+    source: SOURCE_TEXT.efv,
+    wide: true,
+    build: (body, mode) => {
+      if (mode === "table") {
+        seriesTable(body, { ...mData, freq: "A", decimals: 1, projectionStart: pIdx - mData.offset });
+        return;
+      }
+      lineChart(htmlEl("div", null, body), {
+        title: mTitle, periods: mData.periods, freq: "A", series: mData.series, decimals: 1,
+        includeZero: true, projectionStart: pIdx - mData.offset, projectionLabel: "FFA forecasts",
+      });
+      legend(body, mData.series);
+    },
+  });
+
+  // Gross and net debt with their main components, one pair of charts per subsector.
+  for (const s of D.sectors) {
+    for (const [key, label] of [["gross", "Gross debt (IMF)"], ["net", "Net debt (IMF)"]]) {
+      const m = s[key];
+      const title = `${label}: ${s.name}`;
+      const segments = m.components.map((c) => ({
+        id: c.code,
+        label: c.code === "other" ? c.label : `${c.label} (${c.code})`,
+        color: componentColor(c),
+        values: convAll(c.values),
+      }));
+      const total = { label: label.replace(" (IMF)", ""), values: convAll(m.total) };
+      // Balance sheets end at the latest actual year.
+      const cut = (arr) => arr.slice(start, iY + 1);
+      const data = {
+        periods: cut(P),
+        segments: segments.map((g) => ({ ...g, values: cut(g.values) })),
+        total: { ...total, values: cut(total.values) },
+      };
+      card(grid, {
+        title,
+        sub: `${unit}; the four largest positions in ${Y}, the rest aggregated` + (key === "net" ? "; financial assets below zero" : ""),
+        source: SOURCE_TEXT.efv,
+        build: (body, mode) => {
+          if (mode === "table") {
+            seriesTable(body, { periods: data.periods, freq: "A", decimals: 1, series: [data.total, ...data.segments] });
+            return;
+          }
+          stackedColumns(htmlEl("div", null, body), { title, periods: data.periods, freq: "A", segments: data.segments, total: data.total, decimals: 1 });
+          stackLegend(body, data.segments, data.total);
+        },
+      });
+    }
+  }
 }
 
 // ---------------------------------------------------------------- housing
@@ -1201,6 +1383,7 @@ function renderSources(panel) {
     "Inflation is the year-on-year change in consumer prices as compiled by the BIS. Policy rates are end-of-month values; the overview shows the latest daily value. Euro-area members are shown with the ECB rate.",
     "Sectoral debt is BIS total credit to households, non-financial corporations and the general government, in % of GDP.",
     "Exchange rates are ECB euro reference rates; cross rates (e.g. against the CHF) are derived from them. Effective exchange rates are BIS broad indices.",
+    "Swiss public debt is computed from the FFA's GFS balance sheets (data.finance.admin.ch) for general government and its subsectors: gross debt (IMF) = GFS 630 − 6305 − 6307, net debt (IMF) = gross debt − (620 − 6205 − 6207); the charts show the four largest positions in the latest year and aggregate the rest. Maastricht debt, its forecasts and nominal GDP are the FFA's published figures.",
     "Homeownership is the share of the population living in an owner-occupied dwelling (Eurostat, EU-SILC), split into owners with and without an outstanding mortgage or housing loan. Countries that stopped reporting are dropped from the cross-country comparison.",
     "Foreign trade is annual merchandise trade reported to UN Comtrade (Swiss data from the Federal Office for Customs and Border Security), by partner country and HS chapter, converted from USD at ECB annual average rates. Excluding gold removes non-monetary gold (HS 7108). Trade data are refreshed weekly.",
     "Data are refreshed automatically every day. If a source cannot be reached, the previous data are kept and flagged above.",
@@ -1235,6 +1418,7 @@ function renderPanel() {
     overview: renderOverview,
     growth: renderGrowth,
     fiscal: renderFiscal,
+    swissdebt: renderSwissDebt,
     debt: renderDebt,
     housing: renderHousing,
     trade: renderTrade,

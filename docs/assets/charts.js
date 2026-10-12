@@ -347,6 +347,164 @@ export function seriesTable(parent, { periods, freq, series, decimals = 1, proje
   return wrap;
 }
 
+// ---------- stacked columns with a total line ----------
+
+/**
+ * segments: [{ id, label, color, values }]: positive values stack up from zero, negative ones
+ * down. total: { label, values } drawn as a line. Same hover/keyboard behaviour as lineChart.
+ */
+export function stackedColumns(container, { title, periods, freq, segments, total, decimals = 1, height = 260 }) {
+  container.innerHTML = "";
+  container.classList.add("chart");
+  const width = Math.max(260, container.clientWidth);
+  const n = periods.length;
+
+  let lo = 0, hi = 0;
+  for (let i = 0; i < n; i++) {
+    let up = 0, down = 0;
+    for (const s of segments) {
+      const v = s.values[i];
+      if (v == null) continue;
+      if (v >= 0) up += v; else down += v;
+    }
+    const t = total.values[i] ?? 0;
+    lo = Math.min(lo, down, t);
+    hi = Math.max(hi, up, t);
+  }
+  if (lo === 0 && hi === 0) {
+    htmlEl("div", "empty", container, "No data for this period.");
+    return { destroy() {} };
+  }
+  const yt = niceTicks(lo, hi, 5);
+  const yDec = tickDecimals(yt.step);
+  const tickLabels = yt.ticks.map((t) => fmt(t, yDec));
+  const ml = 10 + Math.max(...tickLabels.map((t) => t.length)) * 6.5;
+  const mt = 10, mb = 24, mr = 10;
+  const pw = width - ml - mr;
+  const ph = height - mt - mb;
+  const band = pw / n;
+  const bw = Math.max(2, Math.min(24, band * 0.72));
+  const xc = (i) => ml + band * (i + 0.5);
+  const y = (v) => mt + ph - ((v - yt.lo) / (yt.hi - yt.lo)) * ph;
+
+  const svg = svgEl("svg", {
+    viewBox: `0 0 ${width} ${height}`, height, role: "img", tabindex: "0",
+    "aria-label": `${title || "Chart"}. Use left and right arrow keys to read values.`,
+  }, container);
+  const hoverBand = svgEl("rect", { class: "band", y: mt, height: ph, width: band, style: "display:none" }, svg);
+
+  const yAxis = svgEl("g", { class: "axis" }, svg);
+  const zero = [];
+  yt.ticks.forEach((t, k) => {
+    const yy = Math.round(y(t)) + 0.5;
+    const line = svgEl("line", { class: t === 0 ? "zeroline" : "gridline", x1: ml, x2: ml + pw, y1: yy, y2: yy }, svg);
+    if (t === 0) zero.push(line);
+    svgEl("text", { x: ml - 8, y: yy + 4, "text-anchor": "end" }, yAxis).textContent = tickLabels[k];
+  });
+  const xAxis = svgEl("g", { class: "axis" }, svg);
+  for (const t of xTicks(periods, freq, Math.max(2, Math.floor(pw / 64)))) {
+    svgEl("text", { x: xc(t.i), y: height - 6, "text-anchor": "middle" }, xAxis).textContent = t.label;
+  }
+
+  // Segments: a 2px surface gap separates touching segments.
+  const bars = svgEl("g", {}, svg);
+  for (let i = 0; i < n; i++) {
+    let up = 0, down = 0;
+    for (const s of segments) {
+      const v = s.values[i];
+      if (v == null || v === 0) continue;
+      const a = v > 0 ? up : down;
+      const b = a + v;
+      if (v > 0) up = b; else down = b;
+      const top = y(Math.max(a, b)), bottom = y(Math.min(a, b));
+      const h = bottom - top - 2;
+      if (h <= 0) continue;
+      svgEl("rect", { x: xc(i) - bw / 2, y: top + 1, width: bw, height: h, style: `fill:${s.color}` }, bars);
+    }
+  }
+  // Keep the zero line above the bars.
+  for (const z of zero) svg.appendChild(z);
+
+  // Total line
+  const pts = [];
+  total.values.forEach((v, i) => { if (v != null) pts.push(`${xc(i).toFixed(1)},${y(v).toFixed(1)}`); });
+  if (pts.length > 1) svgEl("path", { class: "series-line", d: "M" + pts.join("L"), style: "stroke:var(--ink)" }, svg);
+  const dot = svgEl("circle", { class: "hover-dot", r: 4, style: "fill:var(--ink);display:none" }, svg);
+
+  const tip = htmlEl("div", "tooltip", container);
+  tip.style.display = "none";
+  const hit = svgEl("rect", { x: ml, y: mt, width: pw, height: ph, fill: "transparent" }, svg);
+
+  let active = null;
+  function show(i) {
+    i = Math.max(0, Math.min(n - 1, i));
+    active = i;
+    hoverBand.style.display = "";
+    hoverBand.setAttribute("x", ml + band * i);
+    const t = total.values[i];
+    if (t != null) {
+      dot.style.display = "";
+      dot.setAttribute("cx", xc(i));
+      dot.setAttribute("cy", y(t));
+    } else dot.style.display = "none";
+    tip.innerHTML = "";
+    htmlEl("div", "t-head", tip, fmtPeriod(periods[i], freq));
+    const row = (v, label, color, rect) => {
+      const r = htmlEl("div", "t-row", tip);
+      const key = htmlEl("span", "key", r);
+      key.style.background = color;
+      if (rect) { key.style.height = "8px"; key.style.width = "8px"; key.style.borderRadius = "2px"; }
+      htmlEl("span", "v", r, v == null ? "–" : fmt(v, decimals));
+      htmlEl("span", "n", r, label);
+    };
+    row(t, total.label, "var(--ink)", false);
+    for (const s of segments.slice().reverse()) if (s.values[i] != null && s.values[i] !== 0) row(s.values[i], s.label, s.color, true);
+    tip.style.display = "";
+    const x = xc(i);
+    const tw = tip.offsetWidth;
+    tip.style.left = `${Math.max(0, x + 14 + tw > width ? x - 14 - tw : x + 14)}px`;
+    tip.style.top = `${mt}px`;
+  }
+  function hide() {
+    active = null;
+    hoverBand.style.display = "none";
+    dot.style.display = "none";
+    tip.style.display = "none";
+  }
+  const indexAt = (evt) => {
+    const rect = svg.getBoundingClientRect();
+    const px = ((evt.clientX - rect.left) / rect.width) * width;
+    return Math.floor((px - ml) / band);
+  };
+  hit.addEventListener("pointermove", (e) => show(indexAt(e)));
+  hit.addEventListener("pointerdown", (e) => show(indexAt(e)));
+  hit.addEventListener("pointerleave", hide);
+  svg.addEventListener("focus", () => show(active ?? n - 1));
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") { show((active ?? n - 1) - 1); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { show((active ?? n - 1) + 1); e.preventDefault(); }
+    else if (e.key === "Home") { show(0); e.preventDefault(); }
+    else if (e.key === "End") { show(n - 1); e.preventDefault(); }
+    else if (e.key === "Escape") hide();
+  });
+  return { destroy() { container.innerHTML = ""; } };
+}
+
+export function stackLegend(parent, segments, total) {
+  const box = htmlEl("div", "legend", parent);
+  const item = htmlEl("span", null, box);
+  const key = htmlEl("span", "key", item);
+  key.style.background = "var(--ink)";
+  item.appendChild(document.createTextNode(total.label));
+  for (const g of segments) {
+    const it = htmlEl("span", null, box);
+    htmlEl("span", "rect-key", it).style.background = g.color;
+    it.appendChild(document.createTextNode(g.label));
+  }
+  return box;
+}
+
 // ---------- horizontal bars (HTML) ----------
 
 // Shared hover/focus tooltip for HTML bar rows. `lines(row)` returns [head, ...rows] where

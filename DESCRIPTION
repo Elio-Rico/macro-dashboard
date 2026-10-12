@@ -11,5 +11,6 @@ Imports:
     jsonlite,
     purrr,
     readr,
+    readxl,
     tidyr
 Encoding: UTF-8

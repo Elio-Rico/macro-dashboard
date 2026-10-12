@@ -23,6 +23,7 @@ Netlify (eliobolliger.com) proxies /dashboard/* to the GitHub Pages site
 | BIS total credit | debt of households, non-financial corporations, government (% of GDP) | quarterly | `bis_credit.json` |
 | Eurostat | government debt and balance (EU/EEA) | quarterly | `eurostat_gov.json` |
 | ECB | euro reference exchange rates | daily | `ecb_fx.json` |
+| Federal Finance Administration (GFS) | Swiss gross/net debt (IMF) by subsector and component from the balance sheets; Maastricht debt and GDP incl. forecasts | annual | `swiss_debt.json` |
 | Eurostat EU-SILC | population by housing tenure (owners with/without mortgage, tenants) | annual | `eurostat_housing.json` |
 | UN Comtrade | goods trade by partner and HS chapter, gold (HS 7108) separately; refreshed weekly | annual | `trade.json` |
 
