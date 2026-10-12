@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-12T08:36:13Z",
+  "generated": "2026-10-12T08:39:24Z",
   "countries": [
     {
       "id": "CHE",
@@ -532,8 +532,8 @@
       "url": "https://www.imf.org/external/datamapper",
       "file": "imf.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2031"
     },
     {
@@ -542,8 +542,8 @@
       "url": "https://data-explorer.oecd.org",
       "file": "oecd_gdp.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2026-Q2"
     },
     {
@@ -552,8 +552,8 @@
       "url": "https://data.bis.org",
       "file": "bis_monthly.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2026-09"
     },
     {
@@ -562,8 +562,8 @@
       "url": "https://data.bis.org/topics/TOTAL_CREDIT",
       "file": "bis_credit.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2026-Q1"
     },
     {
@@ -572,8 +572,8 @@
       "url": "https://ec.europa.eu/eurostat/web/government-finance-statistics",
       "file": "eurostat_gov.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2026-Q1"
     },
     {
@@ -582,8 +582,8 @@
       "url": "https://data.ecb.europa.eu/data/datasets/EXR",
       "file": "ecb_fx.json",
       "ok": true,
-      "last_attempt": "2026-10-12T08:36:13Z",
-      "last_success": "2026-10-12T08:36:13Z",
+      "last_attempt": "2026-10-12T08:39:24Z",
+      "last_success": "2026-10-12T08:39:24Z",
       "latest_period": "2026-10-09"
     }
   ]
