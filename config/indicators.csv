@@ -1,0 +1,26 @@
+id,source,code,label,short,unit,freq,decimals
+gdp_growth_a,imf,NGDP_RPCH,Real GDP growth,GDP growth,%,A,1
+inflation_a,imf,PCPIPCH,Consumer price inflation (annual average),Inflation,%,A,1
+unemployment,imf,LUR,Unemployment rate,Unemployment,% of labour force,A,1
+gdp_usd,imf,NGDPD,GDP at current prices,GDP,USD bn,A,0
+gdp_pc_usd,imf,NGDPDPC,GDP per capita at current prices,GDP per capita,USD,A,0
+current_account,imf,BCA_NGDPD,Current account balance,Current account,% of GDP,A,1
+gov_debt,imf,GGXWDG_NGDP,General government gross debt,Gross debt,% of GDP,A,1
+gov_net_debt,imf,GGXWDN_G01_GDP_PT,General government net debt,Net debt,% of GDP,A,1
+gov_balance,imf,GGXCNL_NGDP,General government overall balance (net lending/borrowing),Overall balance,% of GDP,A,1
+gov_primary_balance,imf,GGXONLB_G01_GDP_PT,General government primary balance,Primary balance,% of GDP,A,1
+gov_ca_primary_balance,imf,GGCBP_G01_PGDP_PT,Cyclically adjusted primary balance,Cycl. adj. primary balance,% of potential GDP,A,1
+gov_revenue,imf,GGR_G01_GDP_PT,General government revenue,Revenue,% of GDP,A,1
+gov_expenditure,imf,G_X_G01_GDP_PT,General government expenditure,Expenditure,% of GDP,A,1
+gdp_yoy,oecd_qna,B1GQ,Real GDP growth (year on year),GDP y/y,%,Q,1
+gdp_qoq,oecd_qna,B1GQ,Real GDP growth (quarter on quarter),GDP q/q,%,Q,1
+cpi_yoy,bis_cpi,771,Consumer price inflation (year on year),CPI y/y,%,M,1
+policy_rate,bis_cbpol,,Central bank policy rate (end of month),Policy rate,%,M,2
+neer,bis_eer,N,Nominal effective exchange rate (broad basket),NEER,"index, 2020 = 100",M,1
+reer,bis_eer,R,Real effective exchange rate (broad basket),REER,"index, 2020 = 100",M,1
+gov_debt_q,eurostat,gov_10q_ggdebt,General government gross debt (Maastricht),Gov. debt (quarterly),% of GDP,Q,1
+gov_balance_q,eurostat,gov_10q_ggnfa,General government balance (seasonally adjusted),Gov. balance (quarterly),% of GDP,Q,1
+credit_hh,bis_credit,H,Credit to households,Households,% of GDP,Q,1
+credit_nfc,bis_credit,N,Credit to non-financial corporations,Non-financial corporations,% of GDP,Q,1
+credit_gov,bis_credit,G,Credit to general government (nominal value),Government,% of GDP,Q,1
+credit_pnfs,bis_credit,P,Credit to the private non-financial sector,Private non-financial,% of GDP,Q,1

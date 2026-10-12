@@ -1,0 +1,15 @@
+Package: macrodashboard
+Title: Data Pipeline for the Macro & Fiscal Monitor
+Version: 0.1.0
+Authors@R: person("Elio", "Bolliger", email = "bolliger.elio@gmail.com", role = c("aut", "cre"))
+Description: Fetches macroeconomic and public finance data from the IMF, OECD, BIS,
+    Eurostat and ECB and writes the JSON files read by the dashboard. Not a package to
+    install; this file lists the dependencies for GitHub Actions.
+Imports:
+    dplyr,
+    httr2,
+    jsonlite,
+    purrr,
+    readr,
+    tidyr
+Encoding: UTF-8

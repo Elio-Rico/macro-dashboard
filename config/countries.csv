@@ -1,0 +1,35 @@
+id,name,imf,oecd,bis,eurostat,currency,groups
+CHE,Switzerland,CHE,CHE,CH,,CHF,default;neighbours;small_open
+EMU,Euro area,EURO,EA,XM,EA21,EUR,default;euro
+DEU,Germany,DEU,DEU,DE,DE,EUR,default;neighbours;g7;euro
+FRA,France,FRA,FRA,FR,FR,EUR,default;neighbours;g7;euro
+ITA,Italy,ITA,ITA,IT,IT,EUR,default;neighbours;g7;euro;south
+ESP,Spain,ESP,ESP,ES,ES,EUR,euro;south
+NLD,Netherlands,NLD,NLD,NL,NL,EUR,euro;small_open
+BEL,Belgium,BEL,BEL,BE,BE,EUR,euro;small_open
+AUT,Austria,AUT,AUT,AT,AT,EUR,neighbours;euro;small_open
+PRT,Portugal,PRT,PRT,PT,PT,EUR,south
+IRL,Ireland,IRL,IRL,IE,IE,EUR,
+GRC,Greece,GRC,GRC,GR,EL,EUR,south
+FIN,Finland,FIN,FIN,FI,FI,EUR,nordic
+SWE,Sweden,SWE,SWE,SE,SE,SEK,small_open;nordic
+NOR,Norway,NOR,NOR,NO,NO,NOK,small_open;nordic
+DNK,Denmark,DNK,DNK,DK,DK,DKK,small_open;nordic
+GBR,United Kingdom,GBR,GBR,GB,,GBP,default;g7
+POL,Poland,POL,POL,PL,PL,PLN,emerging
+CZE,Czech Republic,CZE,CZE,CZ,CZ,CZK,
+HUN,Hungary,HUN,HUN,HU,HU,HUF,
+USA,United States,USA,USA,US,,USD,default;g7
+CAN,Canada,CAN,CAN,CA,,CAD,g7
+JPN,Japan,JPN,JPN,JP,,JPY,default;g7
+AUS,Australia,AUS,AUS,AU,,AUD,
+NZL,New Zealand,NZL,NZL,NZ,,NZD,
+KOR,Korea,KOR,KOR,KR,,KRW,
+SGP,Singapore,SGP,,SG,,SGD,small_open
+CHN,China,CHN,,CN,,CNY,emerging
+IND,India,IND,IND,IN,,INR,emerging
+IDN,Indonesia,IDN,IDN,ID,,IDR,emerging
+BRA,Brazil,BRA,BRA,BR,,BRL,emerging
+MEX,Mexico,MEX,MEX,MX,,MXN,emerging
+TUR,Türkiye,TUR,TUR,TR,,TRY,emerging
+ZAF,South Africa,ZAF,ZAF,ZA,,ZAR,emerging

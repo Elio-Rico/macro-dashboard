@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Macro & Fiscal Monitor</title>
+  <meta name="description" content="Growth, inflation, public finances, sectoral debt and exchange rates for selected economies, refreshed daily from IMF, OECD, BIS, Eurostat and ECB data.">
+  <meta name="author" content="Elio Bolliger">
+  <script>
+    // Served at eliobolliger.com/dashboard/ through a Netlify proxy: without the trailing
+    // slash, relative asset paths would resolve against the site root.
+    if (!/\/$|\.html$/.test(location.pathname)) {
+      location.replace(location.pathname + "/" + location.search + location.hash);
+    }
+    // Apply the saved theme before first paint (same key as the main website's day/night switch).
+    try {
+      var m = localStorage.getItem("wcTheme");
+      if (m === "0") document.documentElement.dataset.theme = "light";
+      if (m === "1") document.documentElement.dataset.theme = "dark";
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="assets/style.css">
+  <script type="module" src="assets/app.js"></script>
+</head>
+<body>
+  <header class="site-header wrap">
+    <div class="topline">
+      <a href="https://www.eliobolliger.com/">← eliobolliger.com</a>
+      <button id="theme-btn" class="icon-btn" type="button">Theme: Auto</button>
+    </div>
+    <h1>Macro &amp; Fiscal Monitor</h1>
+    <p class="lede">Growth, inflation, public finances, debt by sector and exchange rates for selected economies, refreshed daily from IMF, OECD, BIS, Eurostat and ECB data.</p>
+    <div class="updated" id="updated"></div>
+  </header>
+
+  <div class="filters">
+    <div class="wrap row" id="filters"></div>
+  </div>
+
+  <main class="wrap">
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Dashboard sections"></nav>
+    <section class="panel" id="panel" role="tabpanel">
+      <noscript>This dashboard needs JavaScript to draw its charts.</noscript>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      A personal project by <a href="https://www.eliobolliger.com/">Elio Bolliger</a>.
+      Data: IMF, OECD, BIS, Eurostat, ECB, retrieved automatically through their public APIs.
+      The selection and presentation of data are my own and do not reflect the views of any institution I am affiliated with.
+      <a href="https://github.com/Elio-Rico/macro-dashboard">Code on GitHub</a>.
+    </div>
+  </footer>
+</body>
+</html>

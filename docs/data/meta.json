@@ -1,0 +1,590 @@
+{
+  "generated": "2026-10-12T08:15:42Z",
+  "countries": [
+    {
+      "id": "CHE",
+      "name": "Switzerland",
+      "currency": "CHF",
+      "groups": ["default", "neighbours", "small_open"]
+    },
+    {
+      "id": "EMU",
+      "name": "Euro area",
+      "currency": "EUR",
+      "groups": ["default", "euro"]
+    },
+    {
+      "id": "DEU",
+      "name": "Germany",
+      "currency": "EUR",
+      "groups": ["default", "neighbours", "g7", "euro"]
+    },
+    {
+      "id": "FRA",
+      "name": "France",
+      "currency": "EUR",
+      "groups": ["default", "neighbours", "g7", "euro"]
+    },
+    {
+      "id": "ITA",
+      "name": "Italy",
+      "currency": "EUR",
+      "groups": ["default", "neighbours", "g7", "euro", "south"]
+    },
+    {
+      "id": "ESP",
+      "name": "Spain",
+      "currency": "EUR",
+      "groups": ["euro", "south"]
+    },
+    {
+      "id": "NLD",
+      "name": "Netherlands",
+      "currency": "EUR",
+      "groups": ["euro", "small_open"]
+    },
+    {
+      "id": "BEL",
+      "name": "Belgium",
+      "currency": "EUR",
+      "groups": ["euro", "small_open"]
+    },
+    {
+      "id": "AUT",
+      "name": "Austria",
+      "currency": "EUR",
+      "groups": ["neighbours", "euro", "small_open"]
+    },
+    {
+      "id": "PRT",
+      "name": "Portugal",
+      "currency": "EUR",
+      "groups": ["south"]
+    },
+    {
+      "id": "IRL",
+      "name": "Ireland",
+      "currency": "EUR",
+      "groups": []
+    },
+    {
+      "id": "GRC",
+      "name": "Greece",
+      "currency": "EUR",
+      "groups": ["south"]
+    },
+    {
+      "id": "FIN",
+      "name": "Finland",
+      "currency": "EUR",
+      "groups": ["nordic"]
+    },
+    {
+      "id": "SWE",
+      "name": "Sweden",
+      "currency": "SEK",
+      "groups": ["small_open", "nordic"]
+    },
+    {
+      "id": "NOR",
+      "name": "Norway",
+      "currency": "NOK",
+      "groups": ["small_open", "nordic"]
+    },
+    {
+      "id": "DNK",
+      "name": "Denmark",
+      "currency": "DKK",
+      "groups": ["small_open", "nordic"]
+    },
+    {
+      "id": "GBR",
+      "name": "United Kingdom",
+      "currency": "GBP",
+      "groups": ["default", "g7"]
+    },
+    {
+      "id": "POL",
+      "name": "Poland",
+      "currency": "PLN",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "CZE",
+      "name": "Czech Republic",
+      "currency": "CZK",
+      "groups": []
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary",
+      "currency": "HUF",
+      "groups": []
+    },
+    {
+      "id": "USA",
+      "name": "United States",
+      "currency": "USD",
+      "groups": ["default", "g7"]
+    },
+    {
+      "id": "CAN",
+      "name": "Canada",
+      "currency": "CAD",
+      "groups": ["g7"]
+    },
+    {
+      "id": "JPN",
+      "name": "Japan",
+      "currency": "JPY",
+      "groups": ["default", "g7"]
+    },
+    {
+      "id": "AUS",
+      "name": "Australia",
+      "currency": "AUD",
+      "groups": []
+    },
+    {
+      "id": "NZL",
+      "name": "New Zealand",
+      "currency": "NZD",
+      "groups": []
+    },
+    {
+      "id": "KOR",
+      "name": "Korea",
+      "currency": "KRW",
+      "groups": []
+    },
+    {
+      "id": "SGP",
+      "name": "Singapore",
+      "currency": "SGD",
+      "groups": ["small_open"]
+    },
+    {
+      "id": "CHN",
+      "name": "China",
+      "currency": "CNY",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "IND",
+      "name": "India",
+      "currency": "INR",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "IDN",
+      "name": "Indonesia",
+      "currency": "IDR",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "BRA",
+      "name": "Brazil",
+      "currency": "BRL",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "MEX",
+      "name": "Mexico",
+      "currency": "MXN",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "TUR",
+      "name": "Türkiye",
+      "currency": "TRY",
+      "groups": ["emerging"]
+    },
+    {
+      "id": "ZAF",
+      "name": "South Africa",
+      "currency": "ZAR",
+      "groups": ["emerging"]
+    }
+  ],
+  "groups": [
+    {
+      "id": "default",
+      "label": "Default",
+      "members": ["CHE", "EMU", "DEU", "FRA", "ITA", "GBR", "USA", "JPN"]
+    },
+    {
+      "id": "neighbours",
+      "label": "Neighbours",
+      "members": ["CHE", "DEU", "FRA", "ITA", "AUT"]
+    },
+    {
+      "id": "g7",
+      "label": "G7",
+      "members": ["DEU", "FRA", "ITA", "GBR", "USA", "CAN", "JPN"]
+    },
+    {
+      "id": "euro",
+      "label": "Euro area",
+      "members": ["EMU", "DEU", "FRA", "ITA", "ESP", "NLD", "BEL", "AUT"]
+    },
+    {
+      "id": "small_open",
+      "label": "Small open economies",
+      "members": ["CHE", "NLD", "BEL", "AUT", "SWE", "NOR", "DNK", "SGP"]
+    },
+    {
+      "id": "nordic",
+      "label": "Nordics",
+      "members": ["FIN", "SWE", "NOR", "DNK"]
+    },
+    {
+      "id": "south",
+      "label": "Southern euro area",
+      "members": ["ITA", "ESP", "PRT", "GRC"]
+    },
+    {
+      "id": "emerging",
+      "label": "Emerging markets",
+      "members": ["POL", "CHN", "IND", "IDN", "BRA", "MEX", "TUR", "ZAF"]
+    }
+  ],
+  "indicators": [
+    {
+      "id": "gdp_growth_a",
+      "source": "imf",
+      "code": "NGDP_RPCH",
+      "file": "imf.json",
+      "label": "Real GDP growth",
+      "short": "GDP growth",
+      "unit": "%",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "inflation_a",
+      "source": "imf",
+      "code": "PCPIPCH",
+      "file": "imf.json",
+      "label": "Consumer price inflation (annual average)",
+      "short": "Inflation",
+      "unit": "%",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "unemployment",
+      "source": "imf",
+      "code": "LUR",
+      "file": "imf.json",
+      "label": "Unemployment rate",
+      "short": "Unemployment",
+      "unit": "% of labour force",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gdp_usd",
+      "source": "imf",
+      "code": "NGDPD",
+      "file": "imf.json",
+      "label": "GDP at current prices",
+      "short": "GDP",
+      "unit": "USD bn",
+      "freq": "A",
+      "decimals": 0
+    },
+    {
+      "id": "gdp_pc_usd",
+      "source": "imf",
+      "code": "NGDPDPC",
+      "file": "imf.json",
+      "label": "GDP per capita at current prices",
+      "short": "GDP per capita",
+      "unit": "USD",
+      "freq": "A",
+      "decimals": 0
+    },
+    {
+      "id": "current_account",
+      "source": "imf",
+      "code": "BCA_NGDPD",
+      "file": "imf.json",
+      "label": "Current account balance",
+      "short": "Current account",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_debt",
+      "source": "imf",
+      "code": "GGXWDG_NGDP",
+      "file": "imf.json",
+      "label": "General government gross debt",
+      "short": "Gross debt",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_net_debt",
+      "source": "imf",
+      "code": "GGXWDN_G01_GDP_PT",
+      "file": "imf.json",
+      "label": "General government net debt",
+      "short": "Net debt",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_balance",
+      "source": "imf",
+      "code": "GGXCNL_NGDP",
+      "file": "imf.json",
+      "label": "General government overall balance (net lending/borrowing)",
+      "short": "Overall balance",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_primary_balance",
+      "source": "imf",
+      "code": "GGXONLB_G01_GDP_PT",
+      "file": "imf.json",
+      "label": "General government primary balance",
+      "short": "Primary balance",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_ca_primary_balance",
+      "source": "imf",
+      "code": "GGCBP_G01_PGDP_PT",
+      "file": "imf.json",
+      "label": "Cyclically adjusted primary balance",
+      "short": "Cycl. adj. primary balance",
+      "unit": "% of potential GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_revenue",
+      "source": "imf",
+      "code": "GGR_G01_GDP_PT",
+      "file": "imf.json",
+      "label": "General government revenue",
+      "short": "Revenue",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gov_expenditure",
+      "source": "imf",
+      "code": "G_X_G01_GDP_PT",
+      "file": "imf.json",
+      "label": "General government expenditure",
+      "short": "Expenditure",
+      "unit": "% of GDP",
+      "freq": "A",
+      "decimals": 1
+    },
+    {
+      "id": "gdp_yoy",
+      "source": "oecd_qna",
+      "code": "B1GQ",
+      "file": "oecd_gdp.json",
+      "label": "Real GDP growth (year on year)",
+      "short": "GDP y/y",
+      "unit": "%",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "gdp_qoq",
+      "source": "oecd_qna",
+      "code": "B1GQ",
+      "file": "oecd_gdp.json",
+      "label": "Real GDP growth (quarter on quarter)",
+      "short": "GDP q/q",
+      "unit": "%",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "cpi_yoy",
+      "source": "bis_cpi",
+      "code": "771",
+      "file": "bis_monthly.json",
+      "label": "Consumer price inflation (year on year)",
+      "short": "CPI y/y",
+      "unit": "%",
+      "freq": "M",
+      "decimals": 1
+    },
+    {
+      "id": "policy_rate",
+      "source": "bis_cbpol",
+      "code": null,
+      "file": "bis_monthly.json",
+      "label": "Central bank policy rate (end of month)",
+      "short": "Policy rate",
+      "unit": "%",
+      "freq": "M",
+      "decimals": 2
+    },
+    {
+      "id": "neer",
+      "source": "bis_eer",
+      "code": "N",
+      "file": "bis_monthly.json",
+      "label": "Nominal effective exchange rate (broad basket)",
+      "short": "NEER",
+      "unit": "index, 2020 = 100",
+      "freq": "M",
+      "decimals": 1
+    },
+    {
+      "id": "reer",
+      "source": "bis_eer",
+      "code": "R",
+      "file": "bis_monthly.json",
+      "label": "Real effective exchange rate (broad basket)",
+      "short": "REER",
+      "unit": "index, 2020 = 100",
+      "freq": "M",
+      "decimals": 1
+    },
+    {
+      "id": "gov_debt_q",
+      "source": "eurostat",
+      "code": "gov_10q_ggdebt",
+      "file": "eurostat_gov.json",
+      "label": "General government gross debt (Maastricht)",
+      "short": "Gov. debt (quarterly)",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "gov_balance_q",
+      "source": "eurostat",
+      "code": "gov_10q_ggnfa",
+      "file": "eurostat_gov.json",
+      "label": "General government balance (seasonally adjusted)",
+      "short": "Gov. balance (quarterly)",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "credit_hh",
+      "source": "bis_credit",
+      "code": "H",
+      "file": "bis_credit.json",
+      "label": "Credit to households",
+      "short": "Households",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "credit_nfc",
+      "source": "bis_credit",
+      "code": "N",
+      "file": "bis_credit.json",
+      "label": "Credit to non-financial corporations",
+      "short": "Non-financial corporations",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "credit_gov",
+      "source": "bis_credit",
+      "code": "G",
+      "file": "bis_credit.json",
+      "label": "Credit to general government (nominal value)",
+      "short": "Government",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    },
+    {
+      "id": "credit_pnfs",
+      "source": "bis_credit",
+      "code": "P",
+      "file": "bis_credit.json",
+      "label": "Credit to the private non-financial sector",
+      "short": "Private non-financial",
+      "unit": "% of GDP",
+      "freq": "Q",
+      "decimals": 1
+    }
+  ],
+  "sources": [
+    {
+      "id": "imf",
+      "name": "IMF World Economic Outlook and Fiscal Monitor",
+      "url": "https://www.imf.org/external/datamapper",
+      "file": "imf.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2031"
+    },
+    {
+      "id": "oecd_qna",
+      "name": "OECD Quarterly National Accounts",
+      "url": "https://data-explorer.oecd.org",
+      "file": "oecd_gdp.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2026-Q2"
+    },
+    {
+      "id": "bis_monthly",
+      "name": "BIS consumer prices, policy rates and effective exchange rates",
+      "url": "https://data.bis.org",
+      "file": "bis_monthly.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2026-09"
+    },
+    {
+      "id": "bis_credit",
+      "name": "BIS total credit statistics",
+      "url": "https://data.bis.org/topics/TOTAL_CREDIT",
+      "file": "bis_credit.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2026-Q1"
+    },
+    {
+      "id": "eurostat",
+      "name": "Eurostat quarterly government finance statistics",
+      "url": "https://ec.europa.eu/eurostat/web/government-finance-statistics",
+      "file": "eurostat_gov.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2026-Q1"
+    },
+    {
+      "id": "ecb_fx",
+      "name": "ECB euro foreign exchange reference rates",
+      "url": "https://data.ecb.europa.eu/data/datasets/EXR",
+      "file": "ecb_fx.json",
+      "ok": true,
+      "last_attempt": "2026-10-12T08:15:42Z",
+      "last_success": "2026-10-12T08:15:42Z",
+      "latest_period": "2026-10-09"
+    }
+  ]
+}
