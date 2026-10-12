@@ -6,7 +6,7 @@
 # stale) instead of breaking. Sources with `max_age_days` are only refetched once their
 # file is older than that (UN Comtrade: annual data and a strict rate limit).
 
-for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb", "fetch_comtrade", "fetch_efv")) {
+for (f in c("utils", "fetch_imf", "fetch_bis", "fetch_oecd", "fetch_eurostat", "fetch_ecb", "fetch_comtrade", "fetch_efv", "fetch_fso")) {
   source(file.path("R", paste0(f, ".R")))
 }
 
@@ -21,6 +21,7 @@ indicators <- read_config("indicators.csv")
 groups <- read_config("groups.csv")
 trade_reporters <- read_config("trade_reporters.csv")
 hs_chapters <- read_config("hs_chapters.csv")
+ch_cantons <- read_config("ch_cantons.csv")
 
 # The dashboard colours up to eight countries at a time, so presets cannot be larger.
 group_members <- map(set_names(groups$group), function(g) {
@@ -64,6 +65,11 @@ sources <- list(
     id = "eurostat_housing", file = "eurostat_housing.json", fetch = function() fetch_eurostat_housing(countries),
     name = "Eurostat EU-SILC housing tenure",
     url = "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho02/default/table"
+  ),
+  list(
+    id = "fso_housing", file = "fso_housing.json", fetch = function() fetch_fso_housing(ch_cantons),
+    name = "Federal Statistical Office, structural survey: housing tenure by canton",
+    url = "https://www.bfs.admin.ch/bfs/en/home/statistics/construction-housing/dwellings/housing-conditions/tenants-owners.html"
   ),
   list(
     id = "efv_debt", file = "swiss_debt.json", fetch = function() fetch_efv_debt(),

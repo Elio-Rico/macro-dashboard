@@ -25,6 +25,7 @@ Netlify (eliobolliger.com) proxies /dashboard/* to the GitHub Pages site
 | ECB | euro reference exchange rates | daily | `ecb_fx.json` |
 | Federal Finance Administration (GFS) | Swiss gross/net debt (IMF) by subsector and component from the balance sheets; Maastricht debt and GDP incl. forecasts | annual | `swiss_debt.json` |
 | Eurostat EU-SILC | population by housing tenure (owners with/without mortgage, tenants) | annual | `eurostat_housing.json` |
+| Federal Statistical Office (structural survey) | Swiss housing tenure and homeownership rate by canton, since 2019 | annual | `fso_housing.json` |
 | UN Comtrade | goods trade by partner and HS chapter, gold (HS 7108) separately; refreshed weekly | annual | `trade.json` |
 
 Each source is fetched independently. If one fails, its previous file is kept and the

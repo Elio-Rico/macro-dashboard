@@ -945,6 +945,15 @@ function renderSwissDebt(panel) {
 
 // ---------------------------------------------------------------- housing
 
+// FSO occupancy status: owners in the same blues as above, the other categories in greys.
+const FSO_SEGMENTS = [
+  { key: "house", label: "House owners", color: "var(--own-outright)" },
+  { key: "condo", label: "Condominium owners", color: "var(--own-mortgage)" },
+  { key: "coop", label: "Cooperative members", color: "color-mix(in srgb, var(--bar) 55%, var(--surface))" },
+  { key: "tenant", label: "Tenants", color: "var(--bar)" },
+  { key: "other", label: "Other", color: "color-mix(in srgb, var(--bar) 30%, var(--surface))" },
+];
+
 const TENURE_SEGMENTS = [
   { key: "own_outright", label: "Owners without mortgage", color: "var(--own-outright)" },
   { key: "own_mortgage", label: "Owners with mortgage", color: "var(--own-mortgage)" },
@@ -955,7 +964,7 @@ function renderHousing(panel) {
   htmlEl("p", "note", panel,
     "Share of the population by tenure status of the dwelling they live in (EU statistics on income and living conditions). " +
     "Covers EU and EFTA countries, including Switzerland, and some candidate countries; the US, Japan and other economies are not included. " +
-    "National statistics can define homeownership differently (e.g. the Swiss FSO counts households, not persons).");
+    "For Switzerland, the FSO's structural survey measures homeownership per household; it is shown further down, by canton.");
   const grid = htmlEl("div", "grid", panel);
   const H = DATA["eurostat_housing.json"];
 
@@ -1007,6 +1016,85 @@ function renderHousing(panel) {
       });
     },
   });
+
+  // Switzerland in detail (FSO structural survey, per household).
+  const F = DATA["fso_housing.json"];
+  if (F && F.geos) {
+    const Pf = F.periods;
+    const iF = Pf.length - 1;
+    const Yf = Pf[iF];
+    const share = (g, key) => {
+      const t = g.dwellings.total[iF];
+      const v = g.dwellings[key][iF];
+      return t && v != null ? (100 * v) / t : null;
+    };
+    const geos = Object.entries(F.geos)
+      .map(([geo, g]) => ({ geo, ...g }))
+      .filter((g) => g.rate[iF] != null)
+      .sort((a, b) => b.rate[iF] - a.rate[iF]);
+
+    card(grid, {
+      title: `Switzerland: housing tenure by canton, ${Yf}`,
+      sub: "% of occupied dwellings (households), FSO structural survey. The number is the homeownership rate (house and condominium owners); it is a survey estimate, see the confidence interval in the tooltip or table.",
+      source: "Federal Statistical Office (FSO), structural survey",
+      wide: true,
+      build: (body, mode) => {
+        if (mode === "table") {
+          const wrap = htmlEl("div", "table-wrap scroll", body);
+          const table = htmlEl("table", "data", wrap);
+          const tr = htmlEl("tr", null, htmlEl("thead", null, table));
+          for (const h of ["Canton", "Homeownership rate", "± (95% CI)", ...FSO_SEGMENTS.map((s) => s.label)]) htmlEl("th", null, tr, h);
+          const tbody = htmlEl("tbody", null, table);
+          for (const g of geos) {
+            const row = htmlEl("tr", null, tbody);
+            htmlEl("td", null, row, g.name);
+            htmlEl("td", null, row, fmt(g.rate[iF], 1));
+            htmlEl("td", null, row, fmt(g.rate_ci[iF], 1));
+            for (const s of FSO_SEGMENTS) htmlEl("td", null, row, fmt(share(g, s.key), 1));
+          }
+          return;
+        }
+        rectLegend(body, FSO_SEGMENTS);
+        stackedBars(htmlEl("div", null, body), {
+          segments: FSO_SEGMENTS,
+          totalText: (r) => fmt(r.total, 0) + "%",
+          rows: geos.map((g) => ({
+            label: g.name,
+            values: Object.fromEntries(FSO_SEGMENTS.map((s) => [s.key, share(g, s.key)])),
+            total: g.rate[iF],
+            emph: g.geo === "CH",
+            tip: () => [
+              `${g.name}, ${Yf}`,
+              [`${fmt(g.rate[iF], 1)}% ± ${fmt(g.rate_ci[iF], 1)}`, "Homeownership rate"],
+              ...FSO_SEGMENTS.map((s) => [fmt(share(g, s.key), 1) + "%", s.label, s.color]),
+            ],
+          })),
+        });
+      },
+    });
+
+    // The two Swiss measures side by side: FSO per household vs EU-SILC per person.
+    const silc = DATA["eurostat_housing.json"];
+    const yrs = [...new Set([...(silc?.periods ?? []), ...Pf])].sort();
+    const align = (periods, values) => yrs.map((y) => {
+      const k = periods.indexOf(y);
+      return k < 0 ? null : values[k];
+    });
+    const both = [
+      { id: "fso", label: "FSO: households (% of occupied dwellings)", short: "FSO", color: "var(--s1)", values: align(Pf, F.geos.CH.rate) },
+    ];
+    if (silc?.series?.home_own?.CHE) {
+      both.push({ id: "silc", label: "Eurostat EU-SILC: persons (% of population)", short: "EU-SILC", color: "var(--s2)", values: align(silc.periods, silc.series.home_own.CHE) });
+    }
+    const bData = sliceSeries(yrs, both, windowStart("A", yrs));
+    const bTitle = "Switzerland: two measures of homeownership";
+    card(grid, {
+      title: bTitle,
+      sub: "%, annual. The two differ mainly because owner households are on average larger than tenant households.",
+      source: "FSO structural survey; Eurostat EU-SILC",
+      build: (body, mode) => chartBody(body, mode, { title: bTitle, data: bData, freq: "A", decimals: 1, includeZero: true }),
+    });
+  }
 
   indicatorCard(grid, "home_own", { title: "Homeownership rate over time", includeZero: true, sub: "% of population, annual" });
   indicatorCard(grid, "home_own_mortgage", { title: "Owners with a mortgage or housing loan", includeZero: true, sub: "% of population, annual" });
@@ -1384,7 +1472,7 @@ function renderSources(panel) {
     "Sectoral debt is BIS total credit to households, non-financial corporations and the general government, in % of GDP.",
     "Exchange rates are ECB euro reference rates; cross rates (e.g. against the CHF) are derived from them. Effective exchange rates are BIS broad indices.",
     "Swiss public debt is computed from the FFA's GFS balance sheets (data.finance.admin.ch) for general government and its subsectors: gross debt (IMF) = GFS 630 − 6305 − 6307, net debt (IMF) = gross debt − (620 − 6205 − 6207); the charts show the four largest positions in the latest year and aggregate the rest. Maastricht debt, its forecasts and nominal GDP are the FFA's published figures.",
-    "Homeownership is the share of the population living in an owner-occupied dwelling (Eurostat, EU-SILC), split into owners with and without an outstanding mortgage or housing loan. Countries that stopped reporting are dropped from the cross-country comparison.",
+    "Homeownership is the share of the population living in an owner-occupied dwelling (Eurostat, EU-SILC), split into owners with and without an outstanding mortgage or housing loan. Countries that stopped reporting are dropped from the cross-country comparison. For Switzerland, the FSO's structural survey gives tenure per household (share of occupied dwellings) by canton since 2019; it is a sample survey, so values carry confidence intervals.",
     "Foreign trade is annual merchandise trade reported to UN Comtrade (Swiss data from the Federal Office for Customs and Border Security), by partner country and HS chapter, converted from USD at ECB annual average rates. Excluding gold removes non-monetary gold (HS 7108). Trade data are refreshed weekly.",
     "Data are refreshed automatically every day. If a source cannot be reached, the previous data are kept and flagged above.",
   ];
