@@ -2,8 +2,10 @@ name: Update data and deploy
 
 on:
   schedule:
-    # Daily at 16:30 UTC, after the ECB publishes its reference rates (around 16:00 CET).
-    - cron: "30 16 * * *"
+    # Daily at 16:47 UTC, after the ECB publishes its reference rates (around 16:00 CET).
+    # An unusual minute, as GitHub recommends: scheduled runs are delayed most at busy
+    # times such as the full and half hour.
+    - cron: "47 16 * * *"
   workflow_dispatch:
   push:
     branches: [main]

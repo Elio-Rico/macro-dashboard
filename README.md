@@ -9,7 +9,7 @@ Live: <https://www.eliobolliger.com/dashboard/> (proxied from GitHub Pages)
 ## How it works
 
 ```
-GitHub Actions (daily, 16:30 UTC)
+GitHub Actions (daily, 16:47 UTC)
   └─ Rscript R/update_data.R  ──► docs/data/*.json  ──► committed to the repo
                                                     └─► docs/ deployed to GitHub Pages
 Netlify (eliobolliger.com) proxies /dashboard/* to the GitHub Pages site
